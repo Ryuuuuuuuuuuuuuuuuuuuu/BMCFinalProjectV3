@@ -1,13 +1,22 @@
 import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:ecommerce_app/screens/order_success_screen.dart'; // ✅ Added
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CartScreen extends StatelessWidget {
+// ✅ Converted to StatefulWidget
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
   @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  // ✅ Loading state for the Place Order button
+  bool _isLoading = false;
+
+  @override
   Widget build(BuildContext context) {
-    // 1. Get the cart provider and listen for updates
     final cart = Provider.of<CartProvider>(context);
 
     return Scaffold(
@@ -16,7 +25,7 @@ class CartScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 2. List of items or empty message
+          // List of items or empty message
           Expanded(
             child: cart.items.isEmpty
                 ? const Center(
@@ -44,7 +53,6 @@ class CartScreen extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
-                          // 3. Remove item from cart
                           cart.removeItem(cartItem.id);
                         },
                       ),
@@ -55,7 +63,7 @@ class CartScreen extends StatelessWidget {
             ),
           ),
 
-          // 4. Total price summary card
+          // Total price summary card
           Card(
             margin: const EdgeInsets.all(16),
             child: Padding(
@@ -81,7 +89,55 @@ class CartScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+
+          // ✅ Place Order Button
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: (_isLoading || cart.items.isEmpty)
+                  ? null
+                  : () async {
+                setState(() {
+                  _isLoading = true;
+                });
+
+                try {
+                  final cartProvider =
+                  Provider.of<CartProvider>(context, listen: false);
+
+                  // Place order and clear cart
+                  await cartProvider.placeOrder();
+                  await cartProvider.clearCart();
+
+                  // Navigate to success screen
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const OrderSuccessScreen()),
+                        (route) => false,
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to place order: $e')),
+                  );
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _isLoading = false;
+                    });
+                  }
+                }
+              },
+              child: _isLoading
+                  ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+                  : const Text('Place Order'),
+            ),
+          ),
         ],
       ),
     );

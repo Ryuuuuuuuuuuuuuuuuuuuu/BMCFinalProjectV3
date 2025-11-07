@@ -3,11 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ecommerce_app/screens/admin_panel_screen.dart';
 import 'package:ecommerce_app/widgets/product_card.dart';
-import 'package:ecommerce_app/screens/product_detail_screen.dart'; // ✅ existing
-// ✅ Part E: Add these imports
-import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
-import 'package:ecommerce_app/screens/cart_screen.dart'; // 2. ADD THIS
-import 'package:provider/provider.dart'; // 3. ADD THIS
+import 'package:ecommerce_app/screens/product_detail_screen.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:ecommerce_app/screens/cart_screen.dart';
+import 'package:ecommerce_app/screens/order_history_screen.dart'; // ✅ ADD THIS
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,12 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _currentUser != null
-              ? 'Welcome, ${_currentUser!.email}'
-              : 'Home',
+          _currentUser != null ? 'Welcome, ${_currentUser!.email}' : 'Home',
         ),
         actions: [
-          // ✅ --- NEW CART ICON WITH BADGE ---
+          // ✅ Cart Icon with Badge
           Consumer<CartProvider>(
             builder: (context, cart, child) {
               return Badge(
@@ -86,7 +84,19 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          // ✅ --- END OF NEW CART ICON ---
+
+          // ✅ New Order History Button
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: 'My Orders',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const OrderHistoryScreen(),
+                ),
+              );
+            },
+          ),
 
           if (_userRole == 'admin')
             IconButton(
@@ -109,7 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // ✅ Your existing StreamBuilder stays the same
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('products')

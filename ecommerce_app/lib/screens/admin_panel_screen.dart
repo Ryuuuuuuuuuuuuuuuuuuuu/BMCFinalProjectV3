@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/screens/home_screen.dart'; // ✅ Added import for HomeScreen
+import 'package:ecommerce_app/screens/admin_order_screen.dart'; // ✅ ADD THIS
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -65,7 +66,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _descriptionController.clear();
       _priceController.clear();
       _imageUrlController.clear();
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Failed to upload product: $e')),
@@ -106,6 +106,33 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ✅ New Button to Navigate to AdminOrderScreen
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.list_alt),
+                  label: const Text('Manage All Orders'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AdminOrderScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                const Divider(height: 30, thickness: 1),
+
+                const Text(
+                  'Add New Product',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+
                 // Image URL
                 TextFormField(
                   controller: _imageUrlController,
@@ -181,7 +208,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () {
-                    // ✅ Also return to HomeScreen
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context) => const HomeScreen()),
