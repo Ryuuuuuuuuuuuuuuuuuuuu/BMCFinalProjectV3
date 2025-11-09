@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ecommerce_app/screens/home_screen.dart'; // ✅ Added import for HomeScreen
-import 'package:ecommerce_app/screens/admin_order_screen.dart'; // ✅ ADD THIS
+import 'package:ecommerce_app/screens/home_screen.dart';
+import 'package:ecommerce_app/screens/admin_order_screen.dart';
+import 'package:ecommerce_app/screens/admin_chat_list_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -11,22 +12,14 @@ class AdminPanelScreen extends StatefulWidget {
 }
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
-  // 1. A key to validate our Form
   final _formKey = GlobalKey<FormState>();
-
-  // 2. Controllers for each text field
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _imageUrlController = TextEditingController(); // For the image link
-
-  // 3. A variable to show a loading spinner
+  final _imageUrlController = TextEditingController();
   bool _isLoading = false;
-
-  // 4. An instance of Firestore to save data
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 5. Clean up controllers
   @override
   void dispose() {
     _nameController.dispose();
@@ -36,19 +29,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     super.dispose();
   }
 
-  // 🔹 Step 2: Upload Logic
   Future<void> _uploadProduct() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
       _isLoading = true;
     });
 
     try {
       String imageUrl = _imageUrlController.text.trim();
-
       await _firestore.collection('products').add({
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -79,7 +67,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     }
   }
 
-  // 🔹 Step 3: UI Build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,7 +76,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Back to Home',
           onPressed: () {
-            // ✅ Cleanly navigate back to HomeScreen
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -106,7 +92,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ✅ New Button to Navigate to AdminOrderScreen
                 ElevatedButton.icon(
                   icon: const Icon(Icons.list_alt),
                   label: const Text('Manage All Orders'),
@@ -124,6 +109,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   },
                 ),
 
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('View User Chats'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AdminChatListScreen(),
+                      ),
+                    );
+                  },
+                ),
+
                 const Divider(height: 30, thickness: 1),
 
                 const Text(
@@ -133,60 +134,45 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Image URL
                 TextFormField(
                   controller: _imageUrlController,
                   decoration: const InputDecoration(labelText: 'Image URL'),
                   keyboardType: TextInputType.url,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an image URL';
-                    }
-                    if (!value.startsWith('http')) {
-                      return 'Please enter a valid URL (e.g., http://...)';
-                    }
+                    if (value == null || value.isEmpty) return 'Please enter an image URL';
+                    if (!value.startsWith('http')) return 'Please enter a valid URL (e.g., http://...)';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
 
-                // Product Name
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Product Name'),
-                  validator: (value) =>
-                  value!.isEmpty ? 'Please enter a name' : null,
+                  validator: (value) => value!.isEmpty ? 'Please enter a name' : null,
                 ),
                 const SizedBox(height: 16),
 
-                // Description
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(labelText: 'Description'),
                   maxLines: 3,
-                  validator: (value) =>
-                  value!.isEmpty ? 'Please enter a description' : null,
+                  validator: (value) => value!.isEmpty ? 'Please enter a description' : null,
                 ),
                 const SizedBox(height: 16),
 
-                // Price
                 TextFormField(
                   controller: _priceController,
                   decoration: const InputDecoration(labelText: 'Price'),
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a price';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
+                    if (value == null || value.isEmpty) return 'Please enter a price';
+                    if (double.tryParse(value) == null) return 'Please enter a valid number';
                     return null;
                   },
                 ),
                 const SizedBox(height: 20),
 
-                // Upload Button
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -199,7 +185,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
                 const SizedBox(height: 20),
 
-                // 🏠 Back to Home Button
                 ElevatedButton.icon(
                   icon: const Icon(Icons.home),
                   label: const Text('Back to Home'),

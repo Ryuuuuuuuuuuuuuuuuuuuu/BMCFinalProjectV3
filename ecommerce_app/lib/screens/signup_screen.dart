@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ 1. ADD THIS IMPORT
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -16,7 +16,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // ✅ 2. ADD INSTANCE
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool _isLoading = false;
 
@@ -27,30 +27,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  // ✅ STEP 3–6: Modified _signUp function
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // 🔹 Create the user with Firebase Authentication
+
       final UserCredential userCredential =
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // 🔹 If successfully created, save info to Firestore
       if (userCredential.user != null) {
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': _emailController.text.trim(),
-          'role': 'user', // ✅ Default role assigned here
+          'role': 'user',
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
 
-      // 🔹 Navigate to login or AuthWrapper (depends on your flow)
       if (mounted) {
         Navigator.pushReplacement(
           context,

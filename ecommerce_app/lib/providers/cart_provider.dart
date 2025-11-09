@@ -1,23 +1,21 @@
-import 'dart:async'; // ✅ For StreamSubscription
-import 'package:flutter/foundation.dart'; // ✅ Needed for ChangeNotifier
-import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Firestore
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// ✅ Part 1: The CartItem Model
 class CartItem {
-  final String id; // Unique product ID
+  final String id;
   final String name;
   final double price;
-  int quantity; // Quantity can change
+  int quantity;
 
   CartItem({
     required this.id,
     required this.name,
     required this.price,
-    this.quantity = 1, // Default to 1 when added
+    this.quantity = 1,
   });
 
-  // Convert CartItem to Map for Firestore
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -27,7 +25,6 @@ class CartItem {
     };
   }
 
-  // Create CartItem from Map fetched from Firestore
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       id: json['id'],
@@ -38,31 +35,21 @@ class CartItem {
   }
 }
 
-// ✅ Part 2: The CartProvider Class
 class CartProvider with ChangeNotifier {
-  // Private list of items in the cart
-  List<CartItem> _items = []; // removed final
-
-  // Firebase properties
-  String? _userId; // Current user's ID
-  StreamSubscription? _authSubscription; // Auth listener
+  List<CartItem> _items = [];
+  String? _userId;
+  StreamSubscription? _authSubscription;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Public getter to access items (read-only)
   List<CartItem> get items => _items;
 
-  // Getter to calculate total number of items
+  // --- UPDATED GETTERS SECTION ---
   int get itemCount {
-    int total = 0;
-    for (var item in _items) {
-      total += item.quantity;
-    }
-    return total;
+    return _items.fold(0, (total, item) => total + item.quantity);
   }
 
-  // Getter to calculate total price
-  double get totalPrice {
+  double get subtotal {
     double total = 0.0;
     for (var item in _items) {
       total += (item.price * item.quantity);
@@ -70,47 +57,58 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
-  // ✅ Constructor: Listen to auth changes
+  double get vat {
+    return subtotal * 0.12;
+  }
+
+  double get totalPriceWithVat {
+    return subtotal + vat;
+  }
+
   CartProvider() {
-    print('CartProvider initialized');
+    print('CartProvider created.');
+  }
+
+  void initializeAuthListener() {
+    print('CartProvider auth listener initialized');
     _authSubscription = _auth.authStateChanges().listen((User? user) {
       if (user == null) {
-        // User logged out
         print('User logged out, clearing cart.');
         _userId = null;
         _items = [];
       } else {
-        // User logged in
         print('User logged in: ${user.uid}. Fetching cart...');
         _userId = user.uid;
-        _fetchCart(); // Load saved cart from Firestore
+        _fetchCart();
       }
-      notifyListeners(); // Update UI
+      notifyListeners();
     });
   }
 
-  // Add item to cart
-  void addItem(String id, String name, double price) {
+  void addItem(String id, String name, double price, int quantity) {
     var index = _items.indexWhere((item) => item.id == id);
 
     if (index != -1) {
-      _items[index].quantity++;
+      _items[index].quantity += quantity;
     } else {
-      _items.add(CartItem(id: id, name: name, price: price));
+      _items.add(CartItem(
+        id: id,
+        name: name,
+        price: price,
+        quantity: quantity,
+      ));
     }
 
-    _saveCart(); // Save to Firestore
+    _saveCart();
     notifyListeners();
   }
 
-  // Remove item from cart
   void removeItem(String id) {
     _items.removeWhere((item) => item.id == id);
-    _saveCart(); // Save to Firestore
+    _saveCart();
     notifyListeners();
   }
 
-  // ✅ Fetch cart from Firestore
   Future<void> _fetchCart() async {
     if (_userId == null) return;
 
@@ -131,7 +129,6 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ Save cart to Firestore
   Future<void> _saveCart() async {
     if (_userId == null) return;
 
@@ -148,7 +145,6 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Place order
   Future<void> placeOrder() async {
     if (_userId == null || _items.isEmpty) {
       throw Exception('Cart is empty or user is not logged in.');
@@ -158,25 +154,27 @@ class CartProvider with ChangeNotifier {
       final List<Map<String, dynamic>> cartData =
       _items.map((item) => item.toJson()).toList();
 
-      final double total = totalPrice;
+      final double sub = subtotal;
+      final double v = vat;
+      final double total = totalPriceWithVat;
       final int count = itemCount;
 
       await _firestore.collection('orders').add({
         'userId': _userId,
         'items': cartData,
+        'subtotal': sub,
+        'vat': v,
         'totalPrice': total,
         'itemCount': count,
         'status': 'Pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
-
     } catch (e) {
       print('Error placing order: $e');
       throw e;
     }
   }
 
-  // ✅ Clear cart locally and in Firestore
   Future<void> clearCart() async {
     _items = [];
 
@@ -194,7 +192,6 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Cancel auth listener when provider is disposed
   @override
   void dispose() {
     _authSubscription?.cancel();

@@ -21,7 +21,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
 
-    // ✅ Listen for real-time authentication state changes
+
     FirebaseAuth.instance.authStateChanges().listen((user) async {
       if (user == null) {
         setState(() {
@@ -36,7 +36,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     });
   }
 
-  // 🔹 Fetch user role from Firestore
   Future<void> _fetchUserRole(User user) async {
     try {
       final userDoc = await FirebaseFirestore.instance
@@ -62,25 +61,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
       );
     }
 
-    // 🚪 Not logged in → LoginScreen
+
     if (_user == null) {
       return const LoginScreen();
     }
 
-    // 👑 If admin → AdminPanel
     if (_role == 'admin') {
-      // 🧭 Instruction:
-      // 1️⃣ Log in as your 'admin' account.
-      // 2️⃣ You will see the HomeScreen, and the "Admin Panel" icon will be visible in the AppBar.
-      // 3️⃣ Tap the icon to navigate to the Admin Panel where you can add products.
       return const AdminPanelScreen();
     }
 
-    // 👤 Otherwise → Normal user
-    // 🧭 Instruction:
-    // 1️⃣ Log in as a normal 'user' account.
-    // 2️⃣ You will see the HomeScreen, but the "Admin Panel" icon in the AppBar will be hidden.
-    // 3️⃣ Log out anytime using the logout button on the AppBar.
     return const HomeScreen();
   }
 }

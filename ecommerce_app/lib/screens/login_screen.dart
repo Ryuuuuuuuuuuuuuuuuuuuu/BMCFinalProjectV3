@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-// ... (other imports)
-import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth import
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ecommerce_app/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,15 +10,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // ✅ Form Key and Controllers
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // ✅ Loading state variable
   bool _isLoading = false;
 
-  // ✅ Firebase Auth instance
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
@@ -29,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ✅ Firebase Login Function
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -42,8 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
-      // 🔹 AuthWrapper will automatically redirect to HomeScreen if login succeeds
 
     } on FirebaseAuthException catch (e) {
       String message = 'An error occurred';
@@ -84,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // ✅ Email Field
+
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
@@ -93,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ✅ Password Field
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
@@ -103,7 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // ✅ Login Button with loading state
               ElevatedButton(
                 onPressed: _login,
                 child: _isLoading
@@ -116,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 10),
 
-              // ✅ Sign Up Redirect
+
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(

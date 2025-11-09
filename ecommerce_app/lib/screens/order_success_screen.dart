@@ -9,7 +9,7 @@ class OrderSuccessScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order Placed!'),
-        automaticallyImplyLeading: false, // removes back button
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Padding(
